@@ -20,7 +20,7 @@ memory:
   max_chars: 2000
 
 workspace:
-  repo_path: "/data"
+  repo_path: "./data"
   workspaces_dir: "workspaces"
 
 logging:
