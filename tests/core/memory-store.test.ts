@@ -1,0 +1,182 @@
+// tests/core/memory-store.test.ts
+
+import { assertEquals, assertRejects } from "@std/assert";
+import { MemoryStore } from "../../src/core/memory-store.ts";
+import { WorkspaceManager } from "../../src/core/workspace-manager.ts";
+import { MemoryError } from "../../src/types/errors.ts";
+import { NormalizedEvent, Platform } from "../../src/types/events.ts";
+import { WorkspaceInfo } from "../../src/types/workspace.ts";
+
+function createTestEvent(overrides: Partial<NormalizedEvent> = {}): NormalizedEvent {
+  return {
+    platform: "discord" as Platform,
+    channelId: "channel123",
+    userId: "user456",
+    messageId: "msg789",
+    isDm: false,
+    guildId: "guild001",
+    content: "test message",
+    timestamp: new Date(),
+    ...overrides,
+  };
+}
+
+async function withTestMemoryStore(
+  isDm: boolean,
+  fn: (store: MemoryStore, workspace: WorkspaceInfo, manager: WorkspaceManager) => Promise<void>,
+): Promise<void> {
+  const tempDir = await Deno.makeTempDir();
+  try {
+    const manager = new WorkspaceManager({
+      repoPath: tempDir,
+      workspacesDir: "workspaces",
+    });
+    const store = new MemoryStore(manager, {
+      searchLimit: 10,
+      maxChars: 2000,
+    });
+    const event = createTestEvent({ isDm });
+    const workspace = await manager.getOrCreateWorkspace(event);
+
+    await fn(store, workspace, manager);
+  } finally {
+    await Deno.remove(tempDir, { recursive: true });
+  }
+}
+
+Deno.test("MemoryStore - should add public memory", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    const memory = await store.addMemory(workspace, "Test memory content");
+
+    assertEquals(memory.type, "memory");
+    assertEquals(memory.content, "Test memory content");
+    assertEquals(memory.enabled, true);
+    assertEquals(memory.visibility, "public");
+    assertEquals(memory.importance, "normal");
+    assertEquals(memory.id.startsWith("mem_"), true);
+  });
+});
+
+Deno.test("MemoryStore - should add high importance memory", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    const memory = await store.addMemory(workspace, "Important fact", {
+      importance: "high",
+    });
+
+    assertEquals(memory.importance, "high");
+
+    // Should be in important memories
+    const important = await store.getImportantMemories(workspace);
+    assertEquals(important.length, 1);
+    assertEquals(important[0].content, "Important fact");
+  });
+});
+
+Deno.test("MemoryStore - should fail to add private memory in non-DM", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    await assertRejects(
+      async () => {
+        await store.addMemory(workspace, "Private content", {
+          visibility: "private",
+        });
+      },
+      MemoryError,
+      "non-DM context",
+    );
+  });
+});
+
+Deno.test("MemoryStore - should add private memory in DM", async () => {
+  await withTestMemoryStore(true, async (store, workspace) => {
+    const memory = await store.addMemory(workspace, "Private secret", {
+      visibility: "private",
+    });
+
+    assertEquals(memory.visibility, "private");
+    assertEquals(memory.content, "Private secret");
+  });
+});
+
+Deno.test("MemoryStore - should patch memory to disable", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    // Add a memory
+    const memory = await store.addMemory(workspace, "To be disabled", {
+      importance: "high",
+    });
+
+    // Verify it's in important memories
+    let important = await store.getImportantMemories(workspace);
+    assertEquals(important.length, 1);
+
+    // Disable it
+    await store.disableMemory(workspace, memory.id);
+
+    // Should no longer be in important memories
+    important = await store.getImportantMemories(workspace);
+    assertEquals(important.length, 0);
+  });
+});
+
+Deno.test("MemoryStore - should patch memory importance", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    // Add a normal importance memory
+    const memory = await store.addMemory(workspace, "Initially normal");
+
+    // Verify not in important memories
+    let important = await store.getImportantMemories(workspace);
+    assertEquals(important.length, 0);
+
+    // Upgrade to high importance
+    await store.patchMemory(workspace, memory.id, { importance: "high" });
+
+    // Should now be in important memories
+    important = await store.getImportantMemories(workspace);
+    assertEquals(important.length, 1);
+  });
+});
+
+Deno.test("MemoryStore - should fail to patch non-existent memory", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    await assertRejects(
+      async () => {
+        await store.patchMemory(workspace, "mem_nonexistent", { enabled: false });
+      },
+      MemoryError,
+      "not found",
+    );
+  });
+});
+
+Deno.test("MemoryStore - should search memories by keyword", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    await store.addMemory(workspace, "Favorite color is blue");
+    await store.addMemory(workspace, "Favorite food is pizza");
+    await store.addMemory(workspace, "Birthday is January 1st");
+
+    const results = await store.searchMemories(workspace, ["favorite"]);
+    assertEquals(results.length, 2);
+  });
+});
+
+Deno.test("MemoryStore - should not return disabled memories in search", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    const memory = await store.addMemory(workspace, "Soon to be disabled");
+    await store.disableMemory(workspace, memory.id);
+
+    const results = await store.searchMemories(workspace, ["disabled"]);
+    assertEquals(results.length, 0);
+  });
+});
+
+Deno.test("MemoryStore - should preserve memory order by timestamp", async () => {
+  await withTestMemoryStore(false, async (store, workspace) => {
+    await store.addMemory(workspace, "First memory", { importance: "high" });
+    await new Promise((r) => setTimeout(r, 10)); // Small delay
+    await store.addMemory(workspace, "Second memory", { importance: "high" });
+
+    const important = await store.getImportantMemories(workspace);
+    assertEquals(important.length, 2);
+    assertEquals(important[0].content, "First memory");
+    assertEquals(important[1].content, "Second memory");
+  });
+});
