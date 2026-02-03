@@ -7,6 +7,12 @@ import type { SkillRegistry } from "@skills/registry.ts";
 import type { Logger } from "@utils/logger.ts";
 
 /**
+ * Timeout in milliseconds for graceful agent process shutdown
+ * Following GitHub's ACP best practices
+ */
+const DISCONNECT_TIMEOUT_MS = 2000;
+
+/**
  * AgentConnector manages the lifecycle of ACP Agent connections
  * Handles spawning, connecting, and communicating with external ACP Agents
  */
@@ -45,8 +51,9 @@ export class AgentConnector {
     this.process = command.spawn();
 
     // Create streams for JSON-RPC communication
-    const input = this.process.stdin;
-    const output = this.process.stdout;
+    // ACP uses: output (to agent) = WritableStream, input (from agent) = ReadableStream
+    const output = this.process.stdin; // WritableStream - we send messages to agent
+    const input = this.process.stdout; // ReadableStream - we receive messages from agent
 
     // Create the Client implementation
     this.client = new ChatbotClient(
@@ -55,8 +62,8 @@ export class AgentConnector {
       clientConfig,
     );
 
-    // Create ClientSideConnection
-    const stream = acp.ndJsonStream(input, output);
+    // Create ClientSideConnection with proper stream order
+    const stream = acp.ndJsonStream(output, input);
     this.connection = new acp.ClientSideConnection(
       (_agent) => this.client!,
       stream,
@@ -147,14 +154,20 @@ export class AgentConnector {
 
   /**
    * Disconnect from the Agent and clean up resources
+   * Uses best-effort cleanup with timeout (following GitHub's ACP example)
    */
   async disconnect(): Promise<void> {
     if (this.process) {
       try {
         this.process.kill("SIGTERM");
-        await this.process.status;
+
+        // Best-effort cleanup with timeout (following GitHub's example)
+        await Promise.race([
+          this.process.status,
+          new Promise<void>((resolve) => setTimeout(() => resolve(), DISCONNECT_TIMEOUT_MS)),
+        ]);
       } catch (error) {
-        // Ignore kill errors
+        // Ignore kill errors - best effort cleanup
         const logger = this.options.logger as Logger;
         logger.warn("Error killing agent process", {
           error: error instanceof Error ? error.message : String(error),
