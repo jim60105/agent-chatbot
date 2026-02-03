@@ -72,12 +72,9 @@ export class SkillAPIServer {
   private async handleRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
-    // CORS headers (for local development)
+    // CORS headers (not needed for local Deno scripts, but included for completeness)
     const headers = {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "http://localhost",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
     };
 
     // Handle preflight

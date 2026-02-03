@@ -210,8 +210,14 @@ export class SessionOrchestrator {
           const sessionIdFile = join(workspace.path, "SESSION_ID");
           try {
             await Deno.remove(sessionIdFile);
-          } catch {
-            // Ignore errors if file doesn't exist
+          } catch (error) {
+            // Only ignore NotFound errors; log other errors
+            if (!(error instanceof Deno.errors.NotFound)) {
+              sessionLogger.warn("Failed to remove SESSION_ID file", {
+                error: error instanceof Error ? error.message : String(error),
+                path: sessionIdFile,
+              });
+            }
           }
         }
       }

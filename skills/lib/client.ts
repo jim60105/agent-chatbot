@@ -14,9 +14,28 @@ export interface SkillClientConfig {
 /**
  * Default configuration
  * API URL can be overridden by --api-url flag or SKILL_API_URL env
+ * Only localhost/127.0.0.1 URLs are allowed for security
  */
 export function getDefaultConfig(): SkillClientConfig {
   const apiUrl = Deno.env.get("SKILL_API_URL") ?? "http://localhost:3001";
+
+  // Validate that URL is localhost
+  try {
+    const url = new URL(apiUrl);
+    const isLocalhost = url.hostname === "localhost" || url.hostname === "127.0.0.1" ||
+      url.hostname === "::1";
+    if (!isLocalhost) {
+      throw new Error(
+        `Invalid API URL: ${apiUrl}. Only localhost URLs are allowed for security.`,
+      );
+    }
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(`Invalid API URL format: ${apiUrl}`);
+    }
+    throw error;
+  }
+
   return {
     apiUrl,
     timeout: 30_000,
