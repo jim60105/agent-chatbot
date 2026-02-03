@@ -83,7 +83,7 @@ COPY --link --chown=$UID:0 --chmod=775 skills/ /home/deno/.copilot/skills/
 # Prepare MCP config for GitHub Copilot CLI
 RUN cat > /home/deno/.copilot/mcp-config.json <<'EOF'
 {
-  "servers": {
+  "mcpServers": {
     "agentChatbot": {
       "type": "stdio",
       "command": "deno",

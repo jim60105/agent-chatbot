@@ -72,7 +72,7 @@ Add to `~/.copilot/mcp-config.json`:
 
 ```json
 {
-  "servers": {
+  "mcpServers": {
     "agentChatbot": {
       "type": "stdio",
       "command": "deno",
