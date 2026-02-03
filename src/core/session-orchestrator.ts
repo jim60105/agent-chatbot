@@ -6,11 +6,9 @@ import { createAgentConfig, getDefaultAgentType } from "@acp/agent-factory.ts";
 import { ContextAssembler } from "./context-assembler.ts";
 import { WorkspaceManager } from "./workspace-manager.ts";
 import type { SkillRegistry } from "@skills/registry.ts";
-import type { Logger } from "@utils/logger.ts";
 import type { Config } from "../types/config.ts";
 import type { NormalizedEvent } from "../types/events.ts";
 import type { PlatformAdapter } from "@platforms/platform-adapter.ts";
-import type { AssembledContext } from "../types/context.ts";
 import type { ClientConfig } from "@acp/types.ts";
 
 const logger = createLogger("SessionOrchestrator");
