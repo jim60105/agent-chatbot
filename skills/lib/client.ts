@@ -1,7 +1,7 @@
 // skills/lib/client.ts
 // This file is used by all skill scripts to interact with the Skill API
 
-import { parse } from "jsr:@std/flags@1";
+import { parse } from "jsr:@std/flags@^0.224.0";
 
 /**
  * Skill API client configuration

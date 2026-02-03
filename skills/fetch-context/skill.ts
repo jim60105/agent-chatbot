@@ -1,6 +1,6 @@
 // skills/fetch-context/skill.ts
 
-import { parse } from "jsr:@std/flags@1";
+import { parse } from "jsr:@std/flags@^0.224.0";
 import { callSkillApi, exitWithError, outputResult, parseBaseArgs } from "../lib/client.ts";
 
 async function main() {
