@@ -15,14 +15,14 @@ Agent Chatbot is a multi-platform conversational AI bot that acts as an **ACP (A
 
 ## Technology Stack
 
-| Component         | Technology                 | Version      |
-| ----------------- | -------------------------- | ------------ |
-| Runtime           | Deno                       | 2.x          |
-| Language          | TypeScript                 | (Deno native)|
-| ACP SDK           | @agentclientprotocol/sdk   | 0.13.1       |
-| Discord Library   | discord.js                 | ^14.0.0      |
-| Configuration     | YAML (via @std/yaml)       | -            |
-| Testing           | Deno.test + @std/assert    | -            |
+| Component       | Technology               | Version       |
+| --------------- | ------------------------ | ------------- |
+| Runtime         | Deno                     | 2.x           |
+| Language        | TypeScript               | (Deno native) |
+| ACP SDK         | @agentclientprotocol/sdk | 0.13.1        |
+| Discord Library | discord.js               | ^14.0.0       |
+| Configuration   | YAML (via @std/yaml)     | -             |
+| Testing         | Deno.test + @std/assert  | -             |
 
 ## Architecture
 
@@ -50,13 +50,13 @@ Agent Chatbot is a multi-platform conversational AI bot that acts as an **ACP (A
 
 ### Core Components
 
-| Directory           | Purpose                                              |
-| ------------------- | ---------------------------------------------------- |
-| `src/core/`         | Agent session, workspace manager, context assembly   |
-| `src/platforms/`    | Platform adapters (Discord, Misskey)                 |
-| `src/skills/`       | Skill handlers invoked by external Agents            |
-| `src/types/`        | TypeScript type definitions                          |
-| `src/utils/`        | Logging, configuration loading, utilities            |
+| Directory        | Purpose                                            |
+| ---------------- | -------------------------------------------------- |
+| `src/core/`      | Agent session, workspace manager, context assembly |
+| `src/platforms/` | Platform adapters (Discord, Misskey)               |
+| `src/skills/`    | Skill handlers invoked by external Agents          |
+| `src/types/`     | TypeScript type definitions                        |
+| `src/utils/`     | Logging, configuration loading, utilities          |
 
 ## Build & Development Commands
 
@@ -95,24 +95,24 @@ deno run --allow-net --allow-read --allow-write --allow-env src/main.ts
 
 **Never use `--allow-all`**. Required permissions:
 
-| Permission       | Purpose                                              |
-| ---------------- | ---------------------------------------------------- |
-| `--allow-net`    | Discord API, Misskey API, external connections       |
-| `--allow-read`   | Configuration files, workspace files, memory logs    |
-| `--allow-write`  | Memory log files in workspace directories            |
-| `--allow-env`    | Environment variables (tokens, configuration)        |
+| Permission      | Purpose                                           |
+| --------------- | ------------------------------------------------- |
+| `--allow-net`   | Discord API, Misskey API, external connections    |
+| `--allow-read`  | Configuration files, workspace files, memory logs |
+| `--allow-write` | Memory log files in workspace directories         |
+| `--allow-env`   | Environment variables (tokens, configuration)     |
 
 ## Code Style & Formatting
 
 This project uses Deno's built-in formatter and linter. Configuration is in `deno.json`:
 
-| Rule          | Setting   |
-| ------------- | --------- |
-| Line Width    | 100       |
-| Indent        | 2 spaces  |
-| Tabs          | No        |
-| Single Quotes | No        |
-| Prose Wrap    | preserve  |
+| Rule          | Setting  |
+| ------------- | -------- |
+| Line Width    | 100      |
+| Indent        | 2 spaces |
+| Tabs          | No       |
+| Single Quotes | No       |
+| Prose Wrap    | preserve |
 
 ### Import Conventions
 
@@ -162,11 +162,11 @@ const workspacePath = `${config.workspace.repo_path}/workspaces/${platform}/${us
 
 Initial context comprises:
 
-| Source             | Limit                    |
-| ------------------ | ------------------------ |
-| High-importance memories | All enabled          |
-| Recent channel messages  | 20 messages (fixed)  |
-| Guild-related context    | Configurable         |
+| Source                   | Limit               |
+| ------------------------ | ------------------- |
+| High-importance memories | All enabled         |
+| Recent channel messages  | 20 messages (fixed) |
+| Guild-related context    | Configurable        |
 
 **No automatic memory compression or summarization**.
 
@@ -182,12 +182,12 @@ Memory event structure:
 ```typescript
 interface MemoryEvent {
   type: "memory";
-  id: string;           // Unique ID
-  ts: string;           // ISO 8601 timestamp
+  id: string; // Unique ID
+  ts: string; // ISO 8601 timestamp
   enabled: boolean;
   visibility: "public" | "private";
   importance: "high" | "normal";
-  content: string;      // Plain text
+  content: string; // Plain text
 }
 ```
 
@@ -215,10 +215,10 @@ interface PatchEvent {
 ```typescript
 // Skills exposed to external Agents via SKILL.md
 const skills = {
-  "memory-save": saveMemory,      // Save new memory
-  "memory-search": searchMemory,  // Search memories
-  "send-reply": sendReply,        // Send final reply (max 1)
-  "fetch-context": fetchContext,  // Get more context
+  "memory-save": saveMemory, // Save new memory
+  "memory-search": searchMemory, // Search memories
+  "send-reply": sendReply, // Send final reply (max 1)
+  "fetch-context": fetchContext, // Get more context
 };
 ```
 
@@ -228,7 +228,7 @@ Normalized event model:
 
 ```typescript
 interface NormalizedEvent {
-  platform: string;       // "discord" | "misskey"
+  platform: string; // "discord" | "misskey"
   channel_id: string;
   user_id: string;
   message_id: string;
@@ -250,14 +250,14 @@ Platform adapters must implement:
 We use `@agentclientprotocol/sdk` for Client-side connection:
 
 ```typescript
-import { ClientSideConnection, Client } from "@agentclientprotocol/sdk";
+import { Client, ClientSideConnection } from "@agentclientprotocol/sdk";
 
 // Our chatbot implements the Client interface
 const client: Client = {
-  requestPermission: async (request) => { /* handle permission */ },
-  sessionUpdate: async (update) => { /* handle session updates */ },
-  readTextFile: async (path) => { /* read file in workspace */ },
-  writeTextFile: async (path, content) => { /* write file */ },
+  requestPermission: async (request) => {/* handle permission */},
+  sessionUpdate: async (update) => {/* handle session updates */},
+  readTextFile: async (path) => {/* read file in workspace */},
+  writeTextFile: async (path, content) => {/* write file */},
 };
 
 // Connect to external Agent (e.g., GitHub Copilot CLI)
@@ -273,14 +273,14 @@ const response = await connection.prompt(session.id, userMessage);
 
 Use the unified error class hierarchy:
 
-| Error Class      | Use Case                        |
-| ---------------- | ------------------------------- |
-| `ConfigError`    | Configuration issues            |
-| `PlatformError`  | Platform API failures           |
-| `AgentError`     | Agent execution errors          |
-| `MemoryError`    | Memory file I/O errors          |
-| `SkillError`     | Skill execution errors          |
-| `WorkspaceError` | Workspace access violations     |
+| Error Class      | Use Case                    |
+| ---------------- | --------------------------- |
+| `ConfigError`    | Configuration issues        |
+| `PlatformError`  | Platform API failures       |
+| `AgentError`     | Agent execution errors      |
+| `MemoryError`    | Memory file I/O errors      |
+| `SkillError`     | Skill execution errors      |
+| `WorkspaceError` | Workspace access violations |
 
 ```typescript
 import { ConfigError, ErrorCode } from "@types/errors.ts";
@@ -288,7 +288,7 @@ import { ConfigError, ErrorCode } from "@types/errors.ts";
 throw new ConfigError(
   ErrorCode.CONFIG_MISSING_FIELD,
   "Missing required field: platforms.discord.token",
-  { field: "platforms.discord.token" }
+  { field: "platforms.discord.token" },
 );
 ```
 
@@ -334,7 +334,7 @@ Configuration file: `config.yaml`
 ```yaml
 platforms:
   discord:
-    token: "${DISCORD_TOKEN}"   # Environment variable reference
+    token: "${DISCORD_TOKEN}" # Environment variable reference
     enabled: true
   misskey:
     host: "${MISSKEY_HOST}"

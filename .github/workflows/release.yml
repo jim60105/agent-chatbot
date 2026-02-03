@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      - name: Run all tests
+        run: deno task test
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      - name: Compile binaries
+        run: |
+          mkdir -p dist
+          deno compile -A --target x86_64-unknown-linux-gnu --output dist/agent-chatbot-linux-x64 src/main.ts
+          deno compile -A --target x86_64-apple-darwin --output dist/agent-chatbot-darwin-x64 src/main.ts
+          deno compile -A --target aarch64-apple-darwin --output dist/agent-chatbot-darwin-arm64 src/main.ts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: extract_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Setup Docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-setup-steps
+        with:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+          QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
+          tag: ${{ steps.extract_version.outputs.VERSION }}
+
+      - name: Build and push
+        id: build_push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Containerfile
+          push: true
+          target: final
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.extract_version.outputs.VERSION }}
+            RELEASE=${{ github.run_number }}
+          platforms: linux/amd64,linux/arm64
+          # Cache from latest to speed up tagged builds
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/agent-chatbot:cache
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/agent-chatbot:latest
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/agent-chatbot:cache,mode=max
+          sbom: true
+          provenance: true
+
+      - name: Add attestations for GitHub Container Registry
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/agent-chatbot
+          subject-digest: ${{ steps.build_push.outputs.digest }}
+
+      - name: Add attestations for DockerHub
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ secrets.DOCKERHUB_USERNAME }}/agent-chatbot
+          subject-digest: ${{ steps.build_push.outputs.digest }}
+
+      - name: Add attestations for Quay
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: quay.io/${{ github.repository_owner }}/agent-chatbot
+          subject-digest: ${{ steps.build_push.outputs.digest }}

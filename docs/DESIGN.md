@@ -161,10 +161,10 @@ repo/
 interface WorkspaceManager {
   // Calculate workspace key from event
   getWorkspaceKey(event: NormalizedEvent): string;
-  
+
   // Ensure workspace directory exists and return path
   ensureWorkspace(key: string): Promise<string>;
-  
+
   // Validate that a path is within the workspace boundary
   validatePath(workspacePath: string, targetPath: string): boolean;
 }
@@ -182,27 +182,27 @@ interface WorkspaceManager {
 
 Each adapter must implement:
 
-| Capability               | Description                              |
-| ------------------------ | ---------------------------------------- |
-| `fetch_recent_messages`  | Retrieve recent messages from a channel  |
-| `search_messages`        | Search messages by keyword               |
-| `send_reply`             | Send a reply to the platform             |
+| Capability              | Description                             |
+| ----------------------- | --------------------------------------- |
+| `fetch_recent_messages` | Retrieve recent messages from a channel |
+| `search_messages`       | Search messages by keyword              |
+| `send_reply`            | Send a reply to the platform            |
 
 **Adapter Interface:**
 
 ```typescript
 interface PlatformAdapter {
   readonly platform: string;
-  
+
   // Connect to platform and start receiving events
   connect(): Promise<void>;
-  
+
   // Disconnect gracefully
   disconnect(): Promise<void>;
-  
+
   // Subscribe to normalized events
   onEvent(handler: (event: NormalizedEvent) => void): void;
-  
+
   // Platform capabilities (exposed as skills)
   fetchRecentMessages(channelId: string, limit: number): Promise<Message[]>;
   searchMessages(channelId: string, query: string): Promise<Message[]>;
@@ -218,10 +218,10 @@ interface PlatformAdapter {
 interface AgentSession {
   // Session is initialized with workspace path as cwd
   readonly workspacePath: string;
-  
+
   // Run the agent with assembled context
   run(initialContext: Context): Promise<SessionResult>;
-  
+
   // Sessions are not reusable - create new instance for each interaction
 }
 ```
@@ -425,14 +425,14 @@ All platform events are normalized to:
 
 ```typescript
 interface NormalizedEvent {
-  platform: string;       // "discord" | "misskey" | ...
-  channel_id: string;     // Channel/chat room identifier
-  user_id: string;        // Message author identifier
-  message_id: string;     // Original message identifier
-  is_dm: boolean;         // Whether this is a direct message
-  guild_id?: string;      // Server/group identifier (if applicable)
-  content: string;        // Message content
-  timestamp: string;      // ISO 8601 timestamp
+  platform: string; // "discord" | "misskey" | ...
+  channel_id: string; // Channel/chat room identifier
+  user_id: string; // Message author identifier
+  message_id: string; // Original message identifier
+  is_dm: boolean; // Whether this is a direct message
+  guild_id?: string; // Server/group identifier (if applicable)
+  content: string; // Message content
+  timestamp: string; // ISO 8601 timestamp
 }
 ```
 
@@ -440,11 +440,11 @@ interface NormalizedEvent {
 
 Each platform adapter must provide these skills:
 
-| Skill                   | Signature                          | Description                 |
-| ----------------------- | ---------------------------------- | --------------------------- |
-| `fetch_recent_messages` | `(channel_id, limit) → Message[]`  | Get recent channel messages |
-| `search_messages`       | `(channel_id, query) → Message[]`  | Keyword search in channel   |
-| `send_reply`            | `(channel_id, content) → void`     | Send reply to channel       |
+| Skill                   | Signature                         | Description                 |
+| ----------------------- | --------------------------------- | --------------------------- |
+| `fetch_recent_messages` | `(channel_id, limit) → Message[]` | Get recent channel messages |
+| `search_messages`       | `(channel_id, query) → Message[]` | Keyword search in channel   |
+| `send_reply`            | `(channel_id, content) → void`    | Send reply to channel       |
 
 ### Adapter Interface
 
@@ -473,7 +473,7 @@ Primary configuration file: `config.yaml` (YAML or JSON5 supported)
 # config.yaml
 platforms:
   discord:
-    token: "${DISCORD_TOKEN}"  # Can reference env vars
+    token: "${DISCORD_TOKEN}" # Can reference env vars
     enabled: true
   misskey:
     host: "misskey.example.com"
