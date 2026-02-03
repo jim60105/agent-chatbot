@@ -128,16 +128,13 @@ Configuration is loaded from `config.yaml` (YAML format). See [config/config.exa
 ## Container Deployment
 
 ```bash
-# Build image
-podman build -t agent-chatbot .
-
 # Run with volume mounts
 podman run -d --rm \
   -v ./data:/data \
   -v ./config.yaml:/app/config.yaml:ro \
   --env-file .env \
   --name agent-chatbot \
-  agent-chatbot
+  ghcr.io/jim60105/agent-chatbot:latest
 ```
 
 ## Documentation
