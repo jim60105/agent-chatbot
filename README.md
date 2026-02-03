@@ -80,14 +80,14 @@ An AI-powered conversational chatbot using the [Agent Client Protocol (ACP)](htt
 
 ### Available Tasks
 
-| Task    | Description                        | Command            |
-| ------- | ---------------------------------- | ------------------ |
-| `dev`   | Development mode with hot reload   | `deno task dev`    |
-| `start` | Production mode                    | `deno task start`  |
-| `test`  | Run tests                          | `deno task test`   |
-| `fmt`   | Format code                        | `deno task fmt`    |
-| `lint`  | Lint code                          | `deno task lint`   |
-| `check` | Type check                         | `deno task check`  |
+| Task    | Description                      | Command           |
+| ------- | -------------------------------- | ----------------- |
+| `dev`   | Development mode with hot reload | `deno task dev`   |
+| `start` | Production mode                  | `deno task start` |
+| `test`  | Run tests                        | `deno task test`  |
+| `fmt`   | Format code                      | `deno task fmt`   |
+| `lint`  | Lint code                        | `deno task lint`  |
+| `check` | Type check                       | `deno task check` |
 
 ### Project Structure
 
@@ -114,14 +114,14 @@ Configuration is loaded from `config.yaml` (YAML format). See [config/config.exa
 
 ### Environment Variables
 
-| Variable         | Description              | Required |
-| ---------------- | ------------------------ | -------- |
-| `DISCORD_TOKEN`  | Discord bot token        | Yes*     |
-| `MISSKEY_TOKEN`  | Misskey access token     | No       |
-| `MISSKEY_HOST`   | Misskey instance host    | No       |
-| `AGENT_MODEL`    | LLM model identifier     | No       |
-| `LOG_LEVEL`      | Logging level            | No       |
-| `DENO_ENV`       | Environment name         | No       |
+| Variable        | Description           | Required |
+| --------------- | --------------------- | -------- |
+| `DISCORD_TOKEN` | Discord bot token     | Yes*     |
+| `MISSKEY_TOKEN` | Misskey access token  | No       |
+| `MISSKEY_HOST`  | Misskey instance host | No       |
+| `AGENT_MODEL`   | LLM model identifier  | No       |
+| `LOG_LEVEL`     | Logging level         | No       |
+| `DENO_ENV`      | Environment name      | No       |
 
 \* Required if Discord platform is enabled.
 

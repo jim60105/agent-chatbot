@@ -1,11 +1,7 @@
 // tests/mocks/mock-platform-adapter.ts
 
 import { PlatformAdapter } from "../../src/platforms/platform-adapter.ts";
-import type {
-  NormalizedEvent,
-  Platform,
-  PlatformMessage,
-} from "../../src/types/events.ts";
+import type { NormalizedEvent, Platform, PlatformMessage } from "../../src/types/events.ts";
 import {
   ConnectionState,
   PlatformCapabilities,

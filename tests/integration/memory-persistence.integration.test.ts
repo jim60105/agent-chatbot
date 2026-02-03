@@ -1,6 +1,6 @@
 // tests/integration/memory-persistence.integration.test.ts
 
-import { assertEquals, assert } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { join } from "@std/path";
 
 // Use temp directory for integration tests

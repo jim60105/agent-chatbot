@@ -1,10 +1,6 @@
 // tests/fixtures/events.ts
 
-import type {
-  NormalizedEvent,
-  PlatformMessage,
-  Platform,
-} from "../../src/types/events.ts";
+import type { NormalizedEvent, Platform, PlatformMessage } from "../../src/types/events.ts";
 
 /**
  * Create a mock normalized event
