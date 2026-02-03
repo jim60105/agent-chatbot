@@ -34,11 +34,13 @@ export class MockPlatformAdapter extends PlatformAdapter {
   async connect(): Promise<void> {
     this.connected = true;
     this.updateConnectionState(ConnectionState.CONNECTED);
+    await Promise.resolve();
   }
 
   async disconnect(): Promise<void> {
     this.connected = false;
     this.updateConnectionState(ConnectionState.DISCONNECTED);
+    await Promise.resolve();
   }
 
   async sendReply(
@@ -47,17 +49,17 @@ export class MockPlatformAdapter extends PlatformAdapter {
     options?: ReplyOptions,
   ): Promise<ReplyResult> {
     this.sentReplies.push({ channelId, content, options });
-    return {
+    return await Promise.resolve({
       success: true,
       messageId: `reply-${this.sentReplies.length}`,
-    };
+    });
   }
 
   async fetchRecentMessages(
     _channelId: string,
     limit: number,
   ): Promise<PlatformMessage[]> {
-    return this.mockMessages.slice(0, limit);
+    return await Promise.resolve(this.mockMessages.slice(0, limit));
   }
 
   override async searchRelatedMessages(
@@ -66,13 +68,15 @@ export class MockPlatformAdapter extends PlatformAdapter {
     query: string,
     limit: number,
   ): Promise<PlatformMessage[]> {
-    return this.mockMessages
-      .filter((m) => m.content.toLowerCase().includes(query.toLowerCase()))
-      .slice(0, limit);
+    return await Promise.resolve(
+      this.mockMessages
+        .filter((m) => m.content.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, limit),
+    );
   }
 
   async getUsername(userId: string): Promise<string> {
-    return `User-${userId}`;
+    return await Promise.resolve(`User-${userId}`);
   }
 
   isSelf(userId: string): boolean {

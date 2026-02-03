@@ -16,6 +16,7 @@ export class MockWorkspaceManager {
 
   async initialize(): Promise<void> {
     // No-op for mock
+    await Promise.resolve();
   }
 
   getRoot(): string {
@@ -31,11 +32,12 @@ export class MockWorkspaceManager {
   }
 
   async readFile(path: string): Promise<string | null> {
-    return this.files.get(path) ?? null;
+    return await Promise.resolve(this.files.get(path) ?? null);
   }
 
   async writeFile(path: string, content: string): Promise<void> {
     this.files.set(path, content);
+    await Promise.resolve();
   }
 
   /**

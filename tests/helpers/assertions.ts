@@ -1,6 +1,6 @@
 // tests/helpers/assertions.ts
 
-import { assert, assertEquals, assertExists } from "@std/assert";
+import { assert, assertExists } from "@std/assert";
 
 /**
  * Assert that an array contains an item matching the predicate

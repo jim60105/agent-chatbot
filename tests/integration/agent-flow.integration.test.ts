@@ -97,9 +97,10 @@ Deno.test({
     const receivedEvents: NormalizedEvent[] = [];
 
     // Register event handler
-    platform.onEvent(async (event) => {
+    platform.onEvent((event) => {
       eventReceived = true;
       receivedEvents.push(event);
+      return Promise.resolve();
     });
 
     // Simulate event
