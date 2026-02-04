@@ -4,22 +4,21 @@ ARG VERSION=EDGE
 ARG RELEASE=0
 
 ########################################
-# Copilot unpack stage
+# Base stage
+# Deno official Alpine image as base
 ########################################
-FROM docker.io/library/alpine:latest AS copilot-unpacker
+FROM docker.io/denoland/deno:alpine AS base
+
+########################################
+# GitHub Copilot unpack stage
+########################################
+FROM base AS copilot-unpacker
 
 WORKDIR /copilot
 
 ADD https://github.com/github/copilot-cli/releases/latest/download/copilot-linux-x64.tar.gz /tmp/copilot-linux-x64.tar.gz
 
 RUN tar -xzf /tmp/copilot-linux-x64.tar.gz -C /copilot
-
-########################################
-# Base stage
-# Deno official Alpine image as base
-# Using specific patch version for reproducible builds
-########################################
-FROM docker.io/denoland/deno:alpine AS base
 
 ########################################
 # Cache stage
@@ -48,10 +47,6 @@ ARG TARGETVARIANT
 
 ARG UID
 
-# Copy static curl binary for healthcheck
-# https://github.com/tarampampam/curl-docker
-COPY --from=ghcr.io/tarampampam/curl:8.7.1 /bin/curl /usr/local/bin/curl
-
 # Set up directories with proper permissions
 # OpenShift compatibility: root group (GID 0) for arbitrary UID support
 RUN install -d -m 775 -o $UID -g 0 /app && \
@@ -64,8 +59,15 @@ COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
 # Get Dumb Init
 ADD --link --chown=$UID:0 --chmod=755 https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 /usr/local/bin/dumb-init
 
+# Copy static curl binary for healthcheck
+# https://github.com/tarampampam/curl-docker
+COPY --link --chown=$UID:0 --chmod=755 --from=ghcr.io/tarampampam/curl:8.7.1 /bin/curl /usr/local/bin/curl
+
 # Copy Copilot CLI binary
 COPY --link --chown=$UID:0 --chmod=775 --from=copilot-unpacker /copilot/copilot /usr/local/bin/copilot
+
+# Copy cached Deno dependencies from cache stage
+COPY --link --chown=$UID:0 --chmod=775 --from=cache /deno-dir/ /deno-dir/
 
 # Copy application files
 COPY --link --chown=$UID:0 --chmod=775 deno.json deno.lock /app/
@@ -74,14 +76,7 @@ COPY --link --chown=$UID:0 --chmod=775 src/ /app/src/
 COPY --link --chown=$UID:0 --chmod=775 prompts/ /app/prompts/
 
 # Copy skills to ~/.copilot/skills/ for personal skills
-# Create home directory for deno user and install skills
-RUN mkdir -p /home/deno/.copilot/skills && \
-    chown -R $UID:0 /home/deno && \
-    chmod -R 775 /home/deno
 COPY --link --chown=$UID:0 --chmod=775 skills/ /home/deno/.copilot/skills/
-
-# Copy cached Deno dependencies from cache stage
-COPY --link --chown=$UID:0 --chmod=775 --from=cache /deno-dir/ /deno-dir/
 
 WORKDIR /app
 
