@@ -227,3 +227,39 @@ Deno.test("createAgentConfig - inherits critical environment variables for gemin
     }
   }
 });
+
+Deno.test("createAgentConfig - adds --yolo flag to copilot when yolo is true", () => {
+  const config = createTestConfig();
+  const agentConfig = createAgentConfig("copilot", "/tmp/workspace", config, true);
+
+  assertEquals(agentConfig.command, "copilot");
+  assertEquals(agentConfig.args, ["--acp", "--yolo"]);
+  assertEquals(agentConfig.cwd, "/tmp/workspace");
+});
+
+Deno.test("createAgentConfig - does not add --yolo flag to copilot when yolo is false", () => {
+  const config = createTestConfig();
+  const agentConfig = createAgentConfig("copilot", "/tmp/workspace", config, false);
+
+  assertEquals(agentConfig.command, "copilot");
+  assertEquals(agentConfig.args, ["--acp"]);
+  assertEquals(agentConfig.cwd, "/tmp/workspace");
+});
+
+Deno.test("createAgentConfig - adds --yolo flag to gemini when yolo is true", () => {
+  const config = createTestConfig();
+  const agentConfig = createAgentConfig("gemini", "/tmp/workspace", config, true);
+
+  assertEquals(agentConfig.command, "deno");
+  assertEquals(agentConfig.args, ["task", "gemini", "--experimental-acp", "--yolo"]);
+  assertEquals(agentConfig.cwd, "/tmp/workspace");
+});
+
+Deno.test("createAgentConfig - does not add --yolo flag to gemini when yolo is false", () => {
+  const config = createTestConfig();
+  const agentConfig = createAgentConfig("gemini", "/tmp/workspace", config, false);
+
+  assertEquals(agentConfig.command, "deno");
+  assertEquals(agentConfig.args, ["task", "gemini", "--experimental-acp"]);
+  assertEquals(agentConfig.cwd, "/tmp/workspace");
+});

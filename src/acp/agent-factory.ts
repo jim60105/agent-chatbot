@@ -12,6 +12,7 @@ export function createAgentConfig(
   type: AgentType,
   workingDir: string,
   appConfig: Config,
+  yolo = false,
 ): AgentConfig {
   switch (type) {
     case "copilot": {
@@ -42,9 +43,14 @@ export function createAgentConfig(
         }
       }
 
+      const args = ["--acp"];
+      if (yolo) {
+        args.push("--yolo");
+      }
+
       return {
         command: "copilot",
-        args: ["--acp"],
+        args,
         cwd: workingDir,
         env,
       };
@@ -77,9 +83,14 @@ export function createAgentConfig(
         }
       }
 
+      const args = ["task", "gemini", "--experimental-acp"];
+      if (yolo) {
+        args.push("--yolo");
+      }
+
       return {
         command: "deno",
-        args: ["task", "gemini", "--experimental-acp"],
+        args,
         cwd: workingDir,
         env,
       };

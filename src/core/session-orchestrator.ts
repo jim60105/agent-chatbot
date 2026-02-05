@@ -136,7 +136,7 @@ export class SessionOrchestrator {
       // 5. Build ACP connector
       const agentType = getDefaultAgentType(this.config);
       const connector = new AgentConnector({
-        agentConfig: createAgentConfig(agentType, workspace.path, this.config),
+        agentConfig: createAgentConfig(agentType, workspace.path, this.config, this.yolo),
         clientConfig,
         skillRegistry: this.skillRegistry,
         logger: sessionLogger,
