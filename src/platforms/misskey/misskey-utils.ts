@@ -9,6 +9,31 @@ import type { NormalizedEvent, Platform, PlatformMessage } from "../../types/eve
 export type MisskeyNote = entities.Note;
 
 /**
+ * Misskey ChatMessage type (using misskey-js entities)
+ */
+export type MisskeyMessage = entities.ChatMessage;
+
+/**
+ * Misskey ChatMessageLiteFor1on1 type for API responses
+ * The API returns a lighter version without full user objects
+ */
+export interface ChatMessageLite {
+  id: string;
+  createdAt: string;
+  fromUserId: string;
+  fromUser?: {
+    id: string;
+    name: string | null;
+    username: string;
+  };
+  toUserId: string;
+  text: string | null;
+  fileId: string | null;
+  file?: unknown;
+  reactions: Array<{ reaction: string }>;
+}
+
+/**
  * Convert Misskey Note to NormalizedEvent
  */
 export function normalizeMisskeyNote(
@@ -132,4 +157,65 @@ export function buildReplyParams(
   return {
     visibility: originalNote.visibility,
   };
+}
+
+/**
+ * Convert Misskey ChatMessage to NormalizedEvent
+ */
+export function normalizeMisskeyChatMessage(
+  message: MisskeyMessage,
+  _botId: string,
+): NormalizedEvent {
+  return {
+    platform: "misskey" as Platform,
+    channelId: `chat:${message.fromUserId}`,
+    userId: message.fromUserId,
+    messageId: message.id,
+    isDm: true, // Chat messages are always DMs
+    guildId: "", // Misskey doesn't have guilds
+    content: message.text ?? "",
+    timestamp: new Date(message.createdAt),
+    raw: message,
+  };
+}
+
+/**
+ * Convert Misskey ChatMessage to PlatformMessage
+ */
+export function chatMessageToPlatformMessage(
+  message: MisskeyMessage | ChatMessageLite,
+  botId: string,
+): PlatformMessage {
+  // Handle both full ChatMessage and lite versions from API
+  const fromUser = message.fromUser;
+  const displayName = fromUser?.name ?? fromUser?.username ?? message.fromUserId;
+  const formattedUsername = `@${displayName} (${message.fromUserId})`;
+
+  return {
+    messageId: message.id,
+    userId: message.fromUserId,
+    username: formattedUsername,
+    content: message.text ?? "",
+    timestamp: new Date(message.createdAt),
+    isBot: message.fromUserId === botId,
+  };
+}
+
+/**
+ * Check if we should respond to this chat message
+ */
+export function shouldRespondToChatMessage(
+  message: MisskeyMessage,
+  botId: string,
+  config: {
+    allowDm: boolean;
+  },
+): boolean {
+  // Never respond to self
+  if (message.fromUserId === botId) {
+    return false;
+  }
+
+  // Chat messages are always DMs
+  return config.allowDm;
 }

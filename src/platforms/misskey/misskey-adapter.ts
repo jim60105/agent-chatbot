@@ -19,10 +19,15 @@ import {
 } from "./misskey-config.ts";
 import {
   buildReplyParams,
+  ChatMessageLite,
+  chatMessageToPlatformMessage,
+  MisskeyMessage,
   MisskeyNote,
+  normalizeMisskeyChatMessage,
   normalizeMisskeyNote,
   noteToPlatformMessage,
   removeBotMention,
+  shouldRespondToChatMessage,
   shouldRespondToNote,
 } from "./misskey-utils.ts";
 
@@ -81,10 +86,8 @@ export class MisskeyAdapter extends PlatformAdapter {
         this.handleNote(note, false);
       });
 
-      this.mainChannel.on("newChatMessage", (message: unknown) => {
-        // Handle DM
-        const note = message as MisskeyNote;
-        this.handleNote(note, true);
+      this.mainChannel.on("newChatMessage", (message: MisskeyMessage) => {
+        this.handleChatMessage(message);
       });
 
       // Handle stream events
@@ -152,6 +155,35 @@ export class MisskeyAdapter extends PlatformAdapter {
   }
 
   /**
+   * Handle incoming chat message
+   */
+  private async handleChatMessage(message: MisskeyMessage): Promise<void> {
+    if (!this.botId) {
+      logger.warn("Received chat message before bot info was set");
+      return;
+    }
+
+    // Check if we should respond
+    if (
+      !shouldRespondToChatMessage(message, this.botId, {
+        allowDm: this.config.allowDm,
+      })
+    ) {
+      return;
+    }
+
+    logger.debug("Processing chat message", {
+      messageId: message.id,
+      fromUserId: message.fromUserId,
+    });
+
+    // Normalize event
+    const normalizedEvent = normalizeMisskeyChatMessage(message, this.botId);
+
+    await this.emitEvent(normalizedEvent);
+  }
+
+  /**
    * Handle reconnection
    */
   private handleReconnect(): void {
@@ -209,7 +241,7 @@ export class MisskeyAdapter extends PlatformAdapter {
   }
 
   /**
-   * Send a reply (create a note)
+   * Send a reply (create a note or chat message based on channel type)
    */
   async sendReply(
     channelId: string,
@@ -218,10 +250,19 @@ export class MisskeyAdapter extends PlatformAdapter {
   ): Promise<ReplyResult> {
     try {
       // Truncate content if necessary
-      const truncatedContent = content.length > this.capabilities.maxMessageLength
-        ? content.slice(0, this.capabilities.maxMessageLength - 3) + "..."
+      const maxLength = channelId.startsWith("chat:")
+        ? 2000 // Chat messages have 2000 char limit
+        : this.capabilities.maxMessageLength;
+      const truncatedContent = content.length > maxLength
+        ? content.slice(0, maxLength - 3) + "..."
         : content;
 
+      // Handle chat messages
+      if (channelId.startsWith("chat:")) {
+        return await this.sendChatMessage(channelId, truncatedContent);
+      }
+
+      // Handle notes
       const params: Record<string, unknown> = {
         text: truncatedContent,
       };
@@ -272,15 +313,69 @@ export class MisskeyAdapter extends PlatformAdapter {
   }
 
   /**
-   * Fetch recent notes (for context)
+   * Send a chat message to a user
+   */
+  private async sendChatMessage(
+    channelId: string,
+    content: string,
+  ): Promise<ReplyResult> {
+    const userId = channelId.slice(5); // Remove "chat:" prefix
+
+    try {
+      const result = await this.client.request<ChatMessageLite>(
+        "chat/messages/create-to-user",
+        {
+          toUserId: userId,
+          text: content,
+        },
+      );
+
+      logger.debug("Chat message sent", {
+        messageId: result.id,
+        toUserId: userId,
+        contentLength: content.length,
+      });
+
+      return {
+        success: true,
+        messageId: result.id,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      logger.error("Failed to send chat message", {
+        userId,
+        error: errorMessage,
+      });
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  /**
+   * Fetch recent messages (for context)
+   * Supports notes, DMs, and chat messages
    */
   async fetchRecentMessages(
     channelId: string,
     limit: number,
   ): Promise<PlatformMessage[]> {
     try {
-      // If channelId starts with "dm:", fetch DM history
-      // Otherwise, fetch note replies/conversation
+      // For chat:userId, fetch chat message timeline with that user
+      if (channelId.startsWith("chat:")) {
+        const userId = channelId.slice(5);
+        const messages = await this.client.request<ChatMessageLite[]>(
+          "chat/messages/user-timeline",
+          { userId, limit },
+        );
+
+        return messages.map((msg) => chatMessageToPlatformMessage(msg, this.botId!));
+      }
+
+      // If channelId starts with "dm:", fetch DM history via notes
       if (channelId.startsWith("dm:")) {
         const userId = channelId.slice(3);
         const messages = await this.client.request<MisskeyNote[]>(

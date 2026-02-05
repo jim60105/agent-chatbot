@@ -466,6 +466,15 @@ Each platform adapter must provide these skills:
 - **Reply Threading**: When triggered from a note, replies are sent as threaded replies to the same note using `replyId`
 - **Username Format**: User names in context include both display name and ID (e.g., `@DisplayName (userId)`) for better identification
 - Creates new notes only when there's no previous note context (e.g., time-triggered messages)
+- **Chat Messages**: Supports Misskey chat (private messaging) via `chat/messages/user-timeline` for fetching history and `chat/messages/create-to-user` for sending replies. Chat channels use `chat:{userId}` prefix.
+
+**Misskey Channel Types:**
+
+| Channel ID Format | Description                          | Message Type  |
+| ----------------- | ------------------------------------ | ------------- |
+| `note:{noteId}`   | Public note conversation thread      | Note          |
+| `dm:{userId}`     | Direct message via specified notes   | Note (DM)     |
+| `chat:{userId}`   | Private chat room with specific user | Chat Message  |
 
 ---
 

@@ -3,12 +3,17 @@
 import { assertEquals } from "@std/assert";
 import {
   buildReplyParams,
+  ChatMessageLite,
+  chatMessageToPlatformMessage,
   isDirectMessage,
   isMentionToBot,
+  type MisskeyMessage,
   type MisskeyNote,
+  normalizeMisskeyChatMessage,
   normalizeMisskeyNote,
   noteToPlatformMessage,
   removeBotMention,
+  shouldRespondToChatMessage,
   shouldRespondToNote,
 } from "@platforms/misskey/misskey-utils.ts";
 
@@ -170,4 +175,151 @@ Deno.test("noteToPlatformMessage - should mark bot messages", () => {
   const note = createMockNote({ userId: "bot123" });
   const msg = noteToPlatformMessage(note, "bot123");
   assertEquals(msg.isBot, true);
+});
+
+// ==================== Chat Message Tests ====================
+
+// Create a minimal mock chat message for testing
+function createMockChatMessage(
+  overrides: Partial<MisskeyMessage> = {},
+): MisskeyMessage {
+  return {
+    id: "chat123",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    fromUserId: "user456",
+    fromUser: {
+      id: "user456",
+      name: "Chat User",
+      username: "chatuser",
+      host: null,
+      avatarUrl: "https://example.com/avatar.png",
+      avatarBlurhash: null,
+      avatarDecorations: [],
+      isBot: false,
+      isCat: false,
+      emojis: {},
+      onlineStatus: "unknown",
+    },
+    toUserId: "bot123",
+    toUser: null,
+    toRoomId: null,
+    toRoom: null,
+    text: "Hello from chat!",
+    fileId: null,
+    file: null,
+    isRead: false,
+    reactions: [],
+    ...overrides,
+  } as MisskeyMessage;
+}
+
+// Create a mock ChatMessageLite for API response tests
+function createMockChatMessageLite(
+  overrides: Partial<ChatMessageLite> = {},
+): ChatMessageLite {
+  return {
+    id: "chatLite123",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    fromUserId: "user789",
+    fromUser: {
+      id: "user789",
+      name: "Lite User",
+      username: "liteuser",
+    },
+    toUserId: "bot123",
+    text: "Hello from lite chat!",
+    fileId: null,
+    reactions: [],
+    ...overrides,
+  };
+}
+
+Deno.test("normalizeMisskeyChatMessage - should normalize chat message", () => {
+  const message = createMockChatMessage();
+  const event = normalizeMisskeyChatMessage(message, "bot123");
+
+  assertEquals(event.platform, "misskey");
+  assertEquals(event.channelId, "chat:user456");
+  assertEquals(event.userId, "user456");
+  assertEquals(event.messageId, "chat123");
+  assertEquals(event.isDm, true);
+  assertEquals(event.content, "Hello from chat!");
+  assertEquals(event.guildId, "");
+});
+
+Deno.test("normalizeMisskeyChatMessage - should handle null text", () => {
+  const message = createMockChatMessage({ text: null });
+  const event = normalizeMisskeyChatMessage(message, "bot123");
+
+  assertEquals(event.content, "");
+});
+
+Deno.test("chatMessageToPlatformMessage - should convert MisskeyMessage", () => {
+  const message = createMockChatMessage();
+  const msg = chatMessageToPlatformMessage(message, "bot123");
+
+  assertEquals(msg.messageId, "chat123");
+  assertEquals(msg.userId, "user456");
+  assertEquals(msg.username, "@Chat User (user456)");
+  assertEquals(msg.content, "Hello from chat!");
+  assertEquals(msg.isBot, false);
+});
+
+Deno.test("chatMessageToPlatformMessage - should convert ChatMessageLite", () => {
+  const message = createMockChatMessageLite();
+  const msg = chatMessageToPlatformMessage(message, "bot123");
+
+  assertEquals(msg.messageId, "chatLite123");
+  assertEquals(msg.userId, "user789");
+  assertEquals(msg.username, "@Lite User (user789)");
+  assertEquals(msg.content, "Hello from lite chat!");
+  assertEquals(msg.isBot, false);
+});
+
+Deno.test("chatMessageToPlatformMessage - should mark bot messages", () => {
+  const message = createMockChatMessage({ fromUserId: "bot123" });
+  const msg = chatMessageToPlatformMessage(message, "bot123");
+  assertEquals(msg.isBot, true);
+});
+
+Deno.test("chatMessageToPlatformMessage - should fallback to username if name is null", () => {
+  const message = createMockChatMessage();
+  // deno-lint-ignore no-explicit-any
+  (message as any).fromUser = {
+    id: "user456",
+    name: null,
+    username: "chatuser",
+  };
+  const msg = chatMessageToPlatformMessage(message, "bot123");
+
+  assertEquals(msg.username, "@chatuser (user456)");
+});
+
+Deno.test("chatMessageToPlatformMessage - should fallback to userId if fromUser is missing", () => {
+  const message = createMockChatMessageLite();
+  delete message.fromUser;
+  const msg = chatMessageToPlatformMessage(message, "bot123");
+
+  assertEquals(msg.username, "@user789 (user789)");
+});
+
+Deno.test("shouldRespondToChatMessage - should not respond to self", () => {
+  const message = createMockChatMessage({ fromUserId: "bot123" });
+  const result = shouldRespondToChatMessage(message, "bot123", { allowDm: true });
+
+  assertEquals(result, false);
+});
+
+Deno.test("shouldRespondToChatMessage - should respond when DM allowed", () => {
+  const message = createMockChatMessage();
+  const result = shouldRespondToChatMessage(message, "bot123", { allowDm: true });
+
+  assertEquals(result, true);
+});
+
+Deno.test("shouldRespondToChatMessage - should not respond when DM not allowed", () => {
+  const message = createMockChatMessage();
+  const result = shouldRespondToChatMessage(message, "bot123", { allowDm: false });
+
+  assertEquals(result, false);
 });

@@ -301,6 +301,15 @@ Platform adapters must implement:
 - **Username Format**: When building context, usernames are formatted as `@DisplayName (userId)` for better identification in conversation history
 - **Note Channel ID**: Notes use `note:{noteId}` as channel ID for reply threading
 - **DM Channel ID**: DMs use `dm:{userId}` as channel ID
+- **Chat Channel ID**: Private chat messages use `chat:{userId}` as channel ID, supporting Misskey's chat feature for 1-on-1 messaging
+
+**Misskey Channel Types**:
+
+| Channel ID Format | Description                          | API Endpoint                    |
+| ----------------- | ------------------------------------ | ------------------------------- |
+| `note:{noteId}`   | Public note conversation thread      | `notes/replies`, `notes/create` |
+| `dm:{userId}`     | Direct message via specified notes   | `notes/mentions`                |
+| `chat:{userId}`   | Private chat room with specific user | `chat/messages/user-timeline`, `chat/messages/create-to-user` |
 
 ### 6. ACP Client Integration
 
