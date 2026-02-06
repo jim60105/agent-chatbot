@@ -5,8 +5,10 @@
  */
 export const ENV_MAPPINGS = {
   DISCORD_TOKEN: "platforms.discord.token",
+  DISCORD_ENABLED: "platforms.discord.enabled",
   MISSKEY_TOKEN: "platforms.misskey.token",
   MISSKEY_HOST: "platforms.misskey.host",
+  MISSKEY_ENABLED: "platforms.misskey.enabled",
   AGENT_MODEL: "agent.model",
   AGENT_API_KEY: "agent.apiKey",
   GITHUB_TOKEN: "agent.githubToken",

@@ -9,7 +9,7 @@ logging:
 # Platform configurations
 platforms:
   discord:
-    enabled: true # true/false (default: false)
+    enabled: true # true/false (default: false); override with env DISCORD_ENABLED
     token: "${DISCORD_TOKEN}" # Bot token; use environment variable DISCORD_TOKEN or set here
     guildIds: [] # List of guild IDs to operate in (empty = all)
     allowDm: true # Respond to direct messages (default: true)
@@ -17,7 +17,7 @@ platforms:
     commandPrefix: "!" # Optional command prefix (set empty to disable)
 
   misskey:
-    enabled: false # true/false (default: false)
+    enabled: false # true/false (default: false); override with env MISSKEY_ENABLED
     host: "${MISSKEY_HOST}" # e.g., misskey.example.com - or set via MISSKEY_HOST env var
     token: "${MISSKEY_TOKEN}" # API token (preferred via MISSKEY_TOKEN env var)
     secure: true # Use wss/https when connecting (true/false, default: true)
@@ -38,7 +38,7 @@ agent:
   githubToken: "${GITHUB_TOKEN}" # Optional GitHub token for Copilot (env: GITHUB_TOKEN)
   geminiApiKey: "${GEMINI_API_KEY}" # Optional Gemini API key (env: GEMINI_API_KEY)
   opencodeApiKey: "${OPENCODE_API_KEY}" # Optional OpenCode API key (env: OPENCODE_API_KEY)
-  defaultAgentType: "copilot" # Default ACP agent: "copilot", "gemini", or "opencode"
+  defaultAgentType: "copilot" # Default ACP agent: "copilot", "gemini", or "opencode" (env: AGENT_DEFAULT_TYPE)
 
 # Memory system configuration
 memory:
