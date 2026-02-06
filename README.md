@@ -150,7 +150,11 @@ ai-friend/
 │   ├── fetch-context/
 │   ├── send-reply/
 │   └── lib/                 # Shared skill client library
-├── prompts/                 # Bot prompt files
+├── prompts/                 # Bot prompt files (template system)
+│   ├── system.md            # Main system prompt with {{placeholders}}
+│   ├── character_name.md    # Replaces {{character_name}}
+│   ├── character_info.md    # Replaces {{character_info}}
+│   └── ...                  # Any .md file becomes a placeholder source
 ├── config/                  # Configuration examples
 ├── docs/                    # Documentation & BDD features
 │   ├── DESIGN.md            # Design document
@@ -179,6 +183,34 @@ Configuration is loaded from `config.yaml` (YAML format). See [config/config.exa
 
 \* Required if Discord platform is enabled.  
 \*\* Required for GitHub Copilot CLI agent.
+
+## Prompt Template System
+
+The system prompt (`prompts/system.md`) supports a template placeholder system. Any `{{placeholder}}` in the file is automatically replaced with the content of the corresponding `.md` file in the same directory.
+
+For example, if `system.md` contains `{{character_name}}`, the system loads `prompts/character_name.md` and replaces all occurrences of `{{character_name}}` with its trimmed content.
+
+### How It Works
+
+1. On startup, the system reads `prompts/system.md`
+2. It scans the `prompts/` directory for other `.md` files (excluding `system.md` itself)
+3. For each file, it maps the filename (without `.md` extension) to the file's trimmed content
+4. All `{{filename}}` placeholders in `system.md` are replaced with the corresponding content
+5. Placeholders without a matching file are left unchanged and a warning is logged
+
+### Example
+
+```text
+prompts/
+├── system.md                    # Main prompt: "Hello, I am {{character_name}}!"
+├── character_name.md            # "Yuna"
+├── character_info.md            # Character background details
+├── character_personality.md     # Personality description
+├── character_speaking_style.md  # Speaking style guide
+└── character_reference_terms.md # Reference phrases
+```
+
+To customize the bot's character, simply edit the individual fragment files without touching `system.md`.
 
 ## Container Deployment
 
