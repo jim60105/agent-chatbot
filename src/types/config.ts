@@ -62,6 +62,9 @@ export interface AgentConfig {
   /** OpenCode API key for OpenCode CLI (optional) */
   opencodeApiKey?: string;
 
+  /** OpenRouter API key for OpenRouter provider (optional) */
+  openRouterApiKey?: string;
+
   /** Default ACP agent type to use ("copilot", "gemini", or "opencode") */
   defaultAgentType?: "copilot" | "gemini" | "opencode";
 }

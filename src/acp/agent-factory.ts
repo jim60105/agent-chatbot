@@ -99,20 +99,36 @@ export function createAgentConfig(
 
     case "opencode": {
       // OpenCode CLI in ACP mode
-      // OpenCode can work without API key by using GitHub/Gemini providers
-      const opencodeApiKey = appConfig.agent.opencodeApiKey ??
-        Deno.env.get("OPENCODE_API_KEY");
-
       // Build environment: inherit critical env vars
-      // Agent needs PATH to find deno, HOME for skills directory discovery
       const env: Record<string, string> = {};
 
-      // OPENCODE_API_KEY is optional since OpenCode can use GitHub/Gemini providers
+      // OpenCode can work without API key by using other providers
+      const opencodeApiKey = appConfig.agent.opencodeApiKey ??
+        Deno.env.get("OPENCODE_API_KEY");
       if (opencodeApiKey) {
         env["OPENCODE_API_KEY"] = opencodeApiKey;
       }
+      // OpenRouter
+      const openRouterApiKey = appConfig.agent.openRouterApiKey ??
+        Deno.env.get("OPENROUTER_API_KEY");
+      if (openRouterApiKey) {
+        env["OPENROUTER_API_KEY"] = openRouterApiKey;
+      }
+      // Gemini
+      const geminiApiKey = appConfig.agent.geminiApiKey ??
+        Deno.env.get("GEMINI_API_KEY");
+      if (geminiApiKey) {
+        env["GEMINI_API_KEY"] = geminiApiKey;
+      }
+      // GitHub
+      const githubToken = appConfig.agent.githubToken ??
+        Deno.env.get("GITHUB_TOKEN");
+      if (githubToken) {
+        env["GITHUB_TOKEN"] = githubToken;
+      }
 
       // Inherit critical environment variables
+      // Agent needs PATH to find deno, HOME for skills directory discovery
       const inheritVars = ["PATH", "HOME", "DENO_DIR", "LANG", "LC_ALL", "USER"];
       for (const varName of inheritVars) {
         const value = Deno.env.get(varName);

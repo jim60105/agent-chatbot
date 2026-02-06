@@ -12,6 +12,14 @@
       "options": {
         "apiKey": "{env:GEMINI_API_KEY}"
       }
+    },
+    "openrouter": {
+      "models": {
+        "deepseek/deepseek-v3.2": {}
+      },
+      "options": {
+        "apiKey": "{env:OPENROUTER_API_KEY}"
+      }
     }
   },
   "autoupdate": false,
