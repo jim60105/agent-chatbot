@@ -66,7 +66,7 @@ An AI-powered conversational chatbot using the [Agent Client Protocol (ACP)](htt
 3. **Configure the bot**
 
    ```bash
-   cp config/config.example.yaml config.yaml
+   cp config.example.yaml config.yaml
    # Edit config.yaml as needed
    ```
 
@@ -231,6 +231,7 @@ When running AI Friend in a container, you can customize the bot's character by 
 3. **Mount your custom prompts directory when running the container:**
 
    Using `podman run`:
+
    ```bash
    podman run -d --rm \
      -v ./data:/app/data \
@@ -242,6 +243,7 @@ When running AI Friend in a container, you can customize the bot's character by 
    ```
 
    Using `compose.yml` (already configured):
+
    ```yaml
    volumes:
      - ./prompts:/app/prompts:ro,Z # Mount your custom prompts

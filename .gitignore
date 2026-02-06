@@ -157,3 +157,4 @@ vite.config.ts.timestamp-*
 
 # Local config overrides
 config.local.yaml
+config.yaml
