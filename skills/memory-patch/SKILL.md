@@ -1,37 +1,6 @@
 ---
 name: memory-patch
-type: shell
-description: |
-  Modify the state of an existing memory (enable/disable, change visibility/importance).
-  Cannot modify the content - only metadata. Memories cannot be deleted, only disabled.
-parameters:
-  - name: session-id
-    type: string
-    required: true
-    flag: --session-id
-  - name: memory-id
-    type: string
-    required: true
-    flag: --memory-id
-    description: The ID of the memory to modify
-  - name: enabled
-    type: boolean
-    flag: --enabled
-    description: Enable the memory (use --enabled flag)
-  - name: disabled
-    type: boolean
-    flag: --disabled
-    description: Disable the memory (use --disabled flag)
-  - name: visibility
-    type: string
-    flag: --visibility
-    enum: [public, private]
-  - name: importance
-    type: string
-    flag: --importance
-    enum: [high, normal]
-output:
-  format: json
+description: Modify memory metadata (visibility, importance) or disable memories. Use when you need to update the status of existing memories.
 ---
 
 # Memory Patch Skill

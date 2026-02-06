@@ -1,24 +1,6 @@
 ---
 name: memory-search
-type: shell
-description: Search through saved memories using keywords.
-parameters:
-  - name: session-id
-    type: string
-    required: true
-    flag: --session-id
-  - name: query
-    type: string
-    required: true
-    flag: --query
-    description: Search query keywords
-  - name: limit
-    type: number
-    flag: --limit
-    default: 10
-    description: Maximum number of results to return
-output:
-  format: json
+description: Search through saved memories by keywords. Use when you need to recall previous conversations or information about the user.
 ---
 
 # Memory Search Skill

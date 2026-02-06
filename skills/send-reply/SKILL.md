@@ -1,30 +1,6 @@
 ---
 name: send-reply
-type: shell
-description: |
-  Send the final reply message to the user on the platform.
-  This is the ONLY way to communicate with the user externally.
-  Can only be called ONCE per interaction - subsequent calls will fail.
-parameters:
-  - name: session-id
-    type: string
-    required: true
-    flag: --session-id
-    description: The session identifier (provided in SESSION_ID file)
-  - name: message
-    type: string
-    required: true
-    flag: --message
-    description: The final message to send to the user
-output:
-  format: json
-  fields:
-    - name: success
-      type: boolean
-    - name: data.messageId
-      type: string
-    - name: error
-      type: string
+description: Send the final reply message to the user on the platform. This is the ONLY way to communicate with the user externally.
 ---
 
 # Send Reply Skill

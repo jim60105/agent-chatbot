@@ -1,31 +1,6 @@
 ---
 name: fetch-context
-type: shell
-description: |
-  Fetch additional context from the platform when needed.
-  Use this to get more message history or search for related conversations.
-parameters:
-  - name: session-id
-    type: string
-    required: true
-    flag: --session-id
-  - name: type
-    type: string
-    required: true
-    flag: --type
-    enum: [recent_messages, search_messages, user_info]
-    description: Type of context to fetch
-  - name: query
-    type: string
-    flag: --query
-    description: Search query (for search_messages type)
-  - name: limit
-    type: number
-    flag: --limit
-    default: 20
-    description: Maximum items to return
-output:
-  format: json
+description: Fetch additional context from the platform, including recent messages, search through conversation history, or get user information. Use when you need more context than what's provided initially.
 ---
 
 # Fetch Context Skill
