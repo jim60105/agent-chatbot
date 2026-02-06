@@ -1,6 +1,6 @@
 // tests/acp/agent-factory.test.ts
 
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertExists, assertThrows } from "@std/assert";
 import { createAgentConfig, getDefaultAgentType } from "@acp/agent-factory.ts";
 import type { Config } from "../../src/types/config.ts";
 
@@ -79,7 +79,7 @@ Deno.test("createAgentConfig - creates opencode config correctly", () => {
   const agentConfig = createAgentConfig("opencode", "/tmp/workspace", config);
 
   assertEquals(agentConfig.command, "opencode");
-  assertEquals(agentConfig.args, ["--acp"]);
+  assertEquals(agentConfig.args, ["acp"]);
   assertEquals(agentConfig.cwd, "/tmp/workspace");
   assertEquals(agentConfig.env?.OPENCODE_API_KEY, "test-opencode-key");
 });
@@ -140,7 +140,7 @@ Deno.test("createAgentConfig - throws for gemini without API key", () => {
   }
 });
 
-Deno.test("createAgentConfig - throws for opencode without API key", () => {
+Deno.test("createAgentConfig - creates opencode without API key (uses GitHub/Gemini providers)", () => {
   const config = createTestConfig({
     agent: {
       model: "test",
@@ -155,11 +155,11 @@ Deno.test("createAgentConfig - throws for opencode without API key", () => {
   Deno.env.delete("OPENCODE_API_KEY");
 
   try {
-    assertThrows(
-      () => createAgentConfig("opencode", "/tmp/workspace", config),
-      Error,
-      "OpenCode API key not configured",
-    );
+    // OpenCode can work without API key by using GitHub/Gemini providers
+    const agentConfig = createAgentConfig("opencode", "/tmp/workspace", config);
+    assertEquals(agentConfig.command, "opencode");
+    assertEquals(agentConfig.args, ["acp"]);
+    assertEquals(agentConfig.env?.OPENCODE_API_KEY, undefined);
   } finally {
     // Restore env var if it existed
     if (originalKey) {
@@ -400,7 +400,7 @@ Deno.test("createAgentConfig - does not add --yolo flag to gemini when yolo is f
   assertEquals(agentConfig.cwd, "/tmp/workspace");
 });
 
-Deno.test("createAgentConfig - adds --yolo flag to opencode when yolo is true", () => {
+Deno.test("createAgentConfig - adds OPENCODE_YOLO env var when yolo is true", () => {
   const config = createTestConfig({
     agent: {
       model: "test-model",
@@ -412,11 +412,13 @@ Deno.test("createAgentConfig - adds --yolo flag to opencode when yolo is true", 
   const agentConfig = createAgentConfig("opencode", "/tmp/workspace", config, true);
 
   assertEquals(agentConfig.command, "opencode");
-  assertEquals(agentConfig.args, ["--acp", "--yolo"]);
+  assertEquals(agentConfig.args, ["acp"]);
+  assertExists(agentConfig.env);
+  assertEquals(agentConfig.env!["OPENCODE_YOLO"], "true");
   assertEquals(agentConfig.cwd, "/tmp/workspace");
 });
 
-Deno.test("createAgentConfig - does not add --yolo flag to opencode when yolo is false", () => {
+Deno.test("createAgentConfig - does not add OPENCODE_YOLO env var when yolo is false", () => {
   const config = createTestConfig({
     agent: {
       model: "test-model",
@@ -428,6 +430,8 @@ Deno.test("createAgentConfig - does not add --yolo flag to opencode when yolo is
   const agentConfig = createAgentConfig("opencode", "/tmp/workspace", config, false);
 
   assertEquals(agentConfig.command, "opencode");
-  assertEquals(agentConfig.args, ["--acp"]);
+  assertEquals(agentConfig.args, ["acp"]);
+  assertExists(agentConfig.env);
+  assertEquals(agentConfig.env!["OPENCODE_YOLO"], undefined);
   assertEquals(agentConfig.cwd, "/tmp/workspace");
 });

@@ -99,21 +99,18 @@ export function createAgentConfig(
 
     case "opencode": {
       // OpenCode CLI in ACP mode
+      // OpenCode can work without API key by using GitHub/Gemini providers
       const opencodeApiKey = appConfig.agent.opencodeApiKey ??
         Deno.env.get("OPENCODE_API_KEY");
 
-      if (!opencodeApiKey) {
-        throw new Error(
-          "OpenCode API key not configured for OpenCode agent. " +
-            "Set agent.opencodeApiKey in config or OPENCODE_API_KEY env var",
-        );
-      }
-
-      // Build environment: inherit critical env vars and add OPENCODE_API_KEY
+      // Build environment: inherit critical env vars
       // Agent needs PATH to find deno, HOME for skills directory discovery
-      const env: Record<string, string> = {
-        OPENCODE_API_KEY: opencodeApiKey,
-      };
+      const env: Record<string, string> = {};
+
+      // OPENCODE_API_KEY is optional since OpenCode can use GitHub/Gemini providers
+      if (opencodeApiKey) {
+        env["OPENCODE_API_KEY"] = opencodeApiKey;
+      }
 
       // Inherit critical environment variables
       const inheritVars = ["PATH", "HOME", "DENO_DIR", "LANG", "LC_ALL", "USER"];
@@ -124,9 +121,10 @@ export function createAgentConfig(
         }
       }
 
-      const args = ["--acp"];
+      const args = ["acp"];
       if (yolo) {
-        args.push("--yolo");
+        // https://github.com/anomalyco/opencode/pull/11833
+        env["OPENCODE_YOLO"] = "true";
       }
 
       return {
