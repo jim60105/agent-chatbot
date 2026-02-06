@@ -20,7 +20,7 @@ AI Friend is a multi-platform conversational AI bot that acts as an **ACP (Agent
 | --------------- | ------------------------ | ------------- |
 | Runtime         | Deno                     | 2.x           |
 | Language        | TypeScript               | (Deno native) |
-| ACP SDK         | @agentclientprotocol/sdk | 0.13.1        |
+| ACP SDK         | @agentclientprotocol/sdk | 0.14.1        |
 | Discord Library | discord.js               | ^14.0.0       |
 | Misskey Library | misskey-js               | ^2024.10.1    |
 | Configuration   | YAML (via @std/yaml)     | -             |
