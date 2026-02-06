@@ -101,6 +101,93 @@ workspace:
   }
 });
 
+Deno.test("loadConfig - DISCORD_ENABLED env overrides config file", async () => {
+  const config = `
+platforms:
+  discord:
+    token: "test-token"
+    enabled: false
+  misskey:
+    enabled: false
+agent:
+  model: "gpt-4"
+  systemPromptPath: "./prompts/system.md"
+  tokenLimit: 4096
+workspace:
+  repoPath: "./data"
+  workspacesDir: "workspaces"
+`;
+
+  Deno.env.set("DISCORD_ENABLED", "true");
+  try {
+    await withTestConfig(config, async (dir) => {
+      const result = await loadConfig(dir);
+      assertEquals(result.platforms.discord.enabled, true);
+    });
+  } finally {
+    Deno.env.delete("DISCORD_ENABLED");
+  }
+});
+
+Deno.test("loadConfig - MISSKEY_ENABLED env overrides config file", async () => {
+  const config = `
+platforms:
+  discord:
+    token: "test-token"
+    enabled: false
+  misskey:
+    host: "misskey.example.com"
+    token: "mk-token"
+    enabled: false
+agent:
+  model: "gpt-4"
+  systemPromptPath: "./prompts/system.md"
+  tokenLimit: 4096
+workspace:
+  repoPath: "./data"
+  workspacesDir: "workspaces"
+`;
+
+  Deno.env.set("MISSKEY_ENABLED", "true");
+  try {
+    await withTestConfig(config, async (dir) => {
+      const result = await loadConfig(dir);
+      assertEquals(result.platforms.misskey.enabled, true);
+    });
+  } finally {
+    Deno.env.delete("MISSKEY_ENABLED");
+  }
+});
+
+Deno.test("loadConfig - AGENT_DEFAULT_TYPE env overrides config file", async () => {
+  const config = `
+platforms:
+  discord:
+    token: "test-token"
+    enabled: true
+  misskey:
+    enabled: false
+agent:
+  model: "gpt-4"
+  systemPromptPath: "./prompts/system.md"
+  tokenLimit: 4096
+  defaultAgentType: "copilot"
+workspace:
+  repoPath: "./data"
+  workspacesDir: "workspaces"
+`;
+
+  Deno.env.set("AGENT_DEFAULT_TYPE", "opencode");
+  try {
+    await withTestConfig(config, async (dir) => {
+      const result = await loadConfig(dir);
+      assertEquals(result.agent.defaultAgentType, "opencode");
+    });
+  } finally {
+    Deno.env.delete("AGENT_DEFAULT_TYPE");
+  }
+});
+
 Deno.test("loadConfig - should throw on missing required fields", async () => {
   const config = `
 platforms:
