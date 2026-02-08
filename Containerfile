@@ -96,7 +96,7 @@ COPY --link --chown=$UID:0 --chmod=775 --from=cache /deno-dir/ /deno-dir/
 
 # Copy application files
 COPY --link --chown=$UID:0 --chmod=775 deno.json deno.lock /app/
-COPY --link --chown=$UID:0 --chmod=775 config.yaml /app/
+COPY --link --chown=$UID:0 --chmod=775 config.example.yaml /app/config.yaml
 COPY --link --chown=$UID:0 --chmod=775 src/ /app/src/
 # Copy default prompts (can be overridden by mounting custom prompts to /app/prompts)
 COPY --link --chown=$UID:0 --chmod=775 prompts/ /app/prompts/
